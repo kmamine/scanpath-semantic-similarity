@@ -99,12 +99,37 @@ class BM25:
 
 
 def bm25(text_a: str, text_b: str, corpus: Optional[List[str]] = None) -> float:
-    """Compute BM25 score between two texts."""
+    """Compute BM25 score between two texts (normalized to 0-1)."""
+    from rank_bm25 import BM25Okapi
+    from nltk.tokenize import word_tokenize
+
     if corpus is None:
         corpus = [text_a, text_b]
 
-    scorer = BM25(corpus)
-    return scorer.score_pair(text_a, text_b)
+    tokenized_corpus = [word_tokenize(doc.lower()) for doc in corpus]
+    bm25_model = BM25Okapi(tokenized_corpus)
+
+    tokens_a = word_tokenize(text_a.lower())
+    tokens_b = word_tokenize(text_b.lower())
+
+    if not tokens_a or not tokens_b:
+        return 0.0
+
+    if text_a.lower() == text_b.lower():
+        return 1.0
+
+    scores_a = bm25_model.get_scores(tokens_a)
+    scores_b = bm25_model.get_scores(tokens_b)
+
+    score_ab = scores_a[1] if len(scores_a) > 1 else 0.0
+    score_ba = scores_b[0] if len(scores_b) > 0 else 0.0
+
+    avg_score = (score_ab + score_ba) / 2
+
+    min_score = -10.0
+    max_score = 10.0
+    normalized = (avg_score - min_score) / (max_score - min_score)
+    return max(0.0, min(1.0, normalized))
 
 
 def compute_nlp_metrics(
