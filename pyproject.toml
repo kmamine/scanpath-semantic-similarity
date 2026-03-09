@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scanpath_nlp_metrics"
+version = "0.0.1"
+description = "NLP and spatial metrics for scanpath comparison using Vision-Language Models"
+readme = "README.md"
+license = {text = "AGPL-2.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Mohamed Amine KERKOURI"}
+]
+keywords = ["scanpath", "eye-tracking", "vlm", "nlp", "metrics", "visual-language-model"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v2 (AGPLv2)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scipy>=1.11.0",
+    "pillow>=10.0.0",
+    "tqdm>=4.66.0",
+    "openai>=1.0.0",
+    "rouge-score>=0.1.2",
+    "bert-score>=0.3.13",
+    "rank-bm25>=0.2.2",
+    "nltk>=3.8.0",
+    "fastdtw>=0.3.4",
+    "editdistance>=0.6.2",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "pyarrow>=14.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+scanpath-generate = "scanpath_nlp_metrics.cli:run_generation"
+scanpath-generate-marker = "scanpath_nlp_metrics.cli:run_generation_marker"
+scanpath-metrics = "scanpath_nlp_metrics.cli:run_metrics"
+scanpath-analyze = "scanpath_nlp_metrics.cli:run_analysis"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+scanpath_nlp_metrics = ["py.typed"]
