@@ -332,3 +332,25 @@ def normalize_distance_matrix(
 
     np.fill_diagonal(normalized, 1.0 if invert else 0.0)
     return normalized
+
+
+def normalize_distance(distance: float, max_distance: float = None) -> float:
+    """
+    Normalize a distance value to [0, 1] similarity score.
+
+    Args:
+        distance: The distance value to normalize
+        max_distance: Maximum possible distance. If None, uses typical screen diagonal (1680x1050)
+
+    Returns:
+        Similarity score in [0, 1] where 1 = identical
+    """
+    if max_distance is None:
+        max_distance = np.sqrt(1680**2 + 1050**2)
+
+    if max_distance <= 0:
+        return 1.0
+
+    normalized = distance / max_distance
+
+    return max(0.0, min(1.0, 1.0 - normalized))

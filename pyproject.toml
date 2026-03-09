@@ -49,12 +49,6 @@ dev = [
     "ruff>=0.1.0",
 ]
 
-[project.scripts]
-scanpath-generate = "scanpath_nlp_metrics.cli:run_generation"
-scanpath-generate-marker = "scanpath_nlp_metrics.cli:run_generation_marker"
-scanpath-metrics = "scanpath_nlp_metrics.cli:run_metrics"
-scanpath-analyze = "scanpath_nlp_metrics.cli:run_analysis"
-
 [tool.setuptools.packages.find]
 where = ["src"]
 

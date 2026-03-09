@@ -9,7 +9,7 @@ import logging
 import time
 from dataclasses import dataclass
 from io import BytesIO
-from typing import List, Optional
+from typing import Optional, Union
 
 from PIL import Image
 
@@ -32,10 +32,12 @@ class VLMClient:
         base_url: str = "http://localhost:8000/v1",
         api_key: str = "x",
         model: str = "qwen2-vl-7b-instruct",
+        retries: int = 3,
     ):
         self.base_url = base_url
         self.api_key = api_key
         self.model = model
+        self.retries = retries
         self._client = None
 
     @property
@@ -56,14 +58,28 @@ class VLMClient:
         img.save(buf, format=fmt)
         return base64.b64encode(buf.getvalue()).decode()
 
-    def _call_vlm(
+    def describe(
         self,
-        image: Image.Image,
+        image: Union[str, Image.Image],
         prompt: str,
-        max_tokens: int,
-        temperature: float,
-        retries: int = 3,
+        max_tokens: int = 80,
+        temperature: float = 0.2,
     ) -> VLMResponse:
+        """
+        Generate description for an image.
+
+        Args:
+            image: PIL Image or path to image file
+            prompt: Text prompt for the VLM
+            max_tokens: Maximum tokens to generate
+            temperature: Sampling temperature
+
+        Returns:
+            VLMResponse with generated text
+        """
+        if isinstance(image, str):
+            image = Image.open(image).convert("RGB")
+
         b64_img = self._pil_to_b64(image)
 
         messages = [
@@ -80,7 +96,7 @@ class VLMClient:
         ]
 
         last_error = None
-        for attempt in range(retries):
+        for attempt in range(self.retries):
             try:
                 t0 = time.perf_counter()
                 resp = self.client.chat.completions.create(
@@ -106,33 +122,7 @@ class VLMClient:
                 log.warning(f"VLM call attempt {attempt + 1} failed: {e}")
                 time.sleep(2**attempt)
 
-        log.error(f"VLM call failed after {retries} attempts: {last_error}")
-        return VLMResponse(
-            content="[VLM_CALL_FAILED]",
-            prompt_tokens=0,
-            completion_tokens=0,
-            latency_s=0.0,
+        log.error(f"VLM call failed after {self.retries} attempts: {last_error}")
+        raise RuntimeError(
+            f"VLM call failed after {self.retries} attempts: {last_error}"
         )
-
-    def describe_patch(
-        self,
-        patch: Image.Image,
-        prompt: str,
-        max_tokens: int = 80,
-        temperature: float = 0.2,
-    ) -> VLMResponse:
-        return self._call_vlm(patch, prompt, max_tokens, temperature)
-
-    def describe_scanpath(
-        self,
-        image: Image.Image,
-        fixation_descriptions: List[str],
-        prompt_template: str,
-        max_tokens: int = 180,
-        temperature: float = 0.3,
-    ) -> VLMResponse:
-        fix_list = "\n".join(
-            f"Fixation {i + 1}: {desc}" for i, desc in enumerate(fixation_descriptions)
-        )
-        prompt = prompt_template.format(fixation_list=fix_list)
-        return self._call_vlm(image, prompt, max_tokens, temperature)
